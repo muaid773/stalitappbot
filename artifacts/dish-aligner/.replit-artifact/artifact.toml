@@ -1,0 +1,24 @@
+kind = "mobile"
+previewPath = "/"
+title = "Dish Align"
+description = "تطبيق أندرويد عربي يساعد المستخدمين على ضبط أطباق الأقمار الصناعية باستخدام الموقع الجغرافي، أدوات قياس الميلان والزاوية، والبوصلة عند توفرها، مع حسابات دقيقة لاتجاه الطبق وارتفاعه وميلان LNB."
+version = "1.0.0"
+id = "artifacts/dish-aligner"
+router = "expo-domain"
+
+[[services]]
+name = "expo"
+ensurePreviewReachable = "/status"
+paths = [ "/" ]
+localPort = 20599
+
+[services.development]
+run = "pnpm --filter @workspace/dish-aligner run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/dish-aligner", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/dish-aligner", "run", "serve" ]
+
+[services.env]
+PORT = "20599"
+BASE_PATH = "/"

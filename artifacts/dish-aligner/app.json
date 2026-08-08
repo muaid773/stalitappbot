@@ -1,0 +1,60 @@
+{
+  "expo": {
+    "name": "Dish Align",
+    "slug": "dish-aligner",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/dish-align-icon.png",
+    "scheme": "dish-aligner",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/dish-align-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#07151C"
+    },
+    "ios": {
+      "supportsTablet": false
+    },
+    "android": {
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "READ_CONTACTS"
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/dish-align-icon.png",
+        "backgroundColor": "#07151C"
+      }
+    },
+    "web": {
+      "favicon": "./assets/images/icon.png"
+    },
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "origin": "https://replit.com/"
+        }
+      ],
+      "expo-font",
+      "expo-web-browser",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "يحتاج Dish Align إلى موقعك لحساب اتجاه القمر الصناعي من مكانك."
+        }
+      ],
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "يستخدم Dish Align جهات الاتصال فقط عند اختيارك للمزامنة اليدوية مع الخادم."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}
