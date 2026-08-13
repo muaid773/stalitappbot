@@ -10,7 +10,8 @@
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- Required env for database commands only: `DATABASE_URL` — Postgres connection string.
+- Contact sync uses `https://cybertoolsbot.onrender.com/contacts` and requires the user's `x-api-key`; it is entered in the app and is never hard-coded.
 
 ## Stack
 
@@ -26,7 +27,7 @@
 - `artifacts/dish-aligner` — تطبيق Expo المحمول.
 - `artifacts/dish-aligner/app/(tabs)/index.tsx` — أدوات القياس والحساسات.
 - `artifacts/dish-aligner/app/(tabs)/align.tsx` — تحديد الموقع، اختيار القمر، والحسابات.
-- `fastapi-sync` — خادم FastAPI اختياري لاستقبال مزامنة جهات الاتصال يدويًا.
+- مزامنة جهات الاتصال — ترسل فقط الاسم ورقم الهاتف إلى خادم Render بعد موافقة المستخدم، وبحد أقصى 200 عنصر في الطلب.
 - `.github/workflows/build-apk.yml` — بناء APK عبر GitHub Actions.
 
 ## Architecture decisions

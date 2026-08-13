@@ -21,6 +21,8 @@ import { useColors } from '@/hooks/useColors';
 type Satellite = { name: string; longitude: number; direction: string };
 type Coordinates = { latitude: number; longitude: number };
 
+const CONTACT_API_URL = 'https://cybertoolsbot.onrender.com/contacts';
+
 const SATELLITES: Satellite[] = [
   { name: 'نايلسات 201', longitude: -7, direction: '7° غرب' },
   { name: 'عربسات بدر 6', longitude: 26, direction: '26° شرق' },
@@ -70,7 +72,8 @@ export default function AlignmentScreen() {
   const [locating, setLocating] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [syncEnabled, setSyncEnabled] = useState(false);
-  const [serverUrl, setServerUrl] = useState('');
+  const [serverUrl, setServerUrl] = useState(CONTACT_API_URL);
+  const [apiKey, setApiKey] = useState('');
 
   const locationLabel = useMemo(() => {
     if (!coords) return 'لم يتم تحديد الموقع';
@@ -128,8 +131,8 @@ export default function AlignmentScreen() {
       Alert.alert('المزامنة متوقفة', 'فعّل زر الموافقة أولًا بعد قراءة ما سيتم إرساله.');
       return;
     }
-    if (!serverUrl.trim()) {
-      Alert.alert('أدخل عنوان الخادم', 'مثال: https://example.com/api/contacts');
+    if (!serverUrl.trim() || !apiKey.trim()) {
+      Alert.alert('أكمل بيانات المزامنة', 'أدخل عنوان الخادم ومفتاح API قبل الإرسال.');
       return;
     }
     setSyncing(true);
@@ -140,25 +143,40 @@ export default function AlignmentScreen() {
         return;
       }
       const response = await Contacts.getContactsAsync({
-        fields: [Contacts.Fields.PhoneNumbers, Contacts.Fields.Emails],
+        fields: [Contacts.Fields.PhoneNumbers],
       });
+      const contacts = response.data
+        .flatMap((contact) =>
+          (contact.phoneNumbers ?? [])
+            .map((phone) => ({
+              name: contact.name ?? '',
+              phone: phone.number?.trim() ?? '',
+            }))
+            .filter((contact) => contact.phone.length > 0),
+        )
+        .slice(0, 200);
+
+      if (contacts.length === 0) {
+        Alert.alert('لا توجد جهات اتصال', 'لم نجد جهات اتصال تحتوي على أرقام هاتف.');
+        return;
+      }
+
       const payload = {
-        consent: true,
-        source: 'dish-aligner',
-        sentAt: new Date().toISOString(),
-        contacts: response.data.map((contact) => ({
-          name: contact.name,
-          phones: (contact.phoneNumbers ?? []).map((phone) => phone.number).filter(Boolean),
-          emails: (contact.emails ?? []).map((email) => email.email).filter(Boolean),
-        })),
+        contacts,
       };
       const res = await fetch(serverUrl.trim(), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey.trim(),
+        },
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error('server');
-      Alert.alert('اكتملت المزامنة', `تم إرسال ${payload.contacts.length} جهة اتصال إلى الخادم.`);
+      const result = (await res.json()) as { saved?: number; failed?: number };
+      const saved = typeof result.saved === 'number' ? result.saved : contacts.length;
+      const failed = typeof result.failed === 'number' ? result.failed : 0;
+      Alert.alert('اكتملت المزامنة', `تم حفظ ${saved} جهة اتصال${failed ? ` وتعذر حفظ ${failed}` : ''}.`);
     } catch {
       Alert.alert('تعذر الإرسال', 'تحقق من عنوان الخادم واتصال الإنترنت ثم حاول مجددًا.');
     } finally {
@@ -275,7 +293,7 @@ export default function AlignmentScreen() {
           </Pressable>
         </View>
         <Text style={[styles.syncNotice, { color: colors.mutedForeground }]}>
-          عند التفعيل والمزامنة، سيرسل التطبيق الاسم وأرقام الهاتف والبريد الإلكتروني إلى العنوان الذي تدخله. لا يتم الإرسال تلقائيًا ولا في الخلفية.
+          عند التفعيل والمزامنة، سيرسل التطبيق الاسم ورقم الهاتف فقط إلى خادم Render. لا يتم الإرسال تلقائيًا ولا في الخلفية.
         </Text>
         {syncEnabled && (
           <>
@@ -285,7 +303,18 @@ export default function AlignmentScreen() {
               onChangeText={setServerUrl}
               autoCapitalize="none"
               keyboardType="url"
-              placeholder="https://example.com/api/contacts"
+              placeholder={CONTACT_API_URL}
+              placeholderTextColor={colors.mutedForeground}
+              style={[styles.serverInput, { backgroundColor: colors.secondary, borderColor: colors.border, color: colors.foreground }]}
+            />
+            <TextInput
+              testID="sync-api-key"
+              value={apiKey}
+              onChangeText={setApiKey}
+              autoCapitalize="none"
+              autoCorrect={false}
+              secureTextEntry
+              placeholder="مفتاح API (x-api-key)"
               placeholderTextColor={colors.mutedForeground}
               style={[styles.serverInput, { backgroundColor: colors.secondary, borderColor: colors.border, color: colors.foreground }]}
             />
